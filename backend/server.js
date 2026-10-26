@@ -24,6 +24,10 @@ app.use(
 );
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.redirect('/api');
+});
+
 // API Base Route / Health Check
 app.get('/api', (req, res) => {
   res.status(200).json({
