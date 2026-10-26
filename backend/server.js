@@ -18,12 +18,34 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+
+      const frontendUrl = process.env.FRONTEND_URL
+        ? process.env.FRONTEND_URL.trim().replace(/\/$/, '')
+        : null;
+      const normalizedOrigin = origin.trim().replace(/\/$/, '');
+
+      // Allow configured FRONTEND_URL, any Vercel domain (*.vercel.app), or localhost
+      if (
+        (frontendUrl && normalizedOrigin === frontendUrl) ||
+        normalizedOrigin.endsWith('.vercel.app') ||
+        normalizedOrigin.includes('localhost') ||
+        normalizedOrigin.includes('127.0.0.1')
+      ) {
+        return callback(null, true);
+      }
+
+      // Allow other origins as well so requests are never blocked
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
 app.use(express.json());
 
+// Redirect root to /api
 app.get('/', (req, res) => {
   res.redirect('/api');
 });
